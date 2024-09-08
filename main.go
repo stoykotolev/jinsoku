@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
@@ -22,31 +21,49 @@ func randomInRange(min, max int) int {
 	return rand.Intn(max-min+1) + min
 }
 
-func main() {
-
-	myApp := app.New()
-	myWindow := myApp.NewWindow("Key Detection App")
+func getRandomSymbol() string {
 	arrLen := len(SpecialSymbolsAndNumbers)
 	el := randomInRange(0, arrLen)
 
 	// The character to match
-	lettersToMatch := SpecialSymbolsAndNumbers[el]
+	return string(SpecialSymbolsAndNumbers[el])
+}
 
+type Game struct {
+	nRounds       int8
+	currentSymbol string
+}
+
+func main() {
+
+	myApp := app.New()
+	myWindow := myApp.NewWindow("Key Detection App")
 	// Display the letter in the UI
-	text := canvas.NewText(string(lettersToMatch), color.White)
+	game := Game{
+		nRounds:       10,
+		currentSymbol: getRandomSymbol(),
+	}
+	text := canvas.NewText(game.currentSymbol, color.White)
 	text.TextSize = 64
 
 	content := container.NewCenter(text)
 	myWindow.SetContent(content)
 
+	// Start the game
+	// Iterate N number of rounds, for each game
+
 	// Set a keyboard event listener
 	myWindow.Canvas().SetOnTypedRune(func(r rune) {
 		typed := string(r)
-		fmt.Println("Pressed symbol", typed)
+		if typed == game.currentSymbol {
+			newSymbol := getRandomSymbol()
+			game.currentSymbol = newSymbol
+			text.Text = newSymbol
+			text.Refresh()
+		}
 	})
 
 	// Show the window and start the app
 	myWindow.Resize(fyne.NewSize(300, 300))
 	myWindow.ShowAndRun()
-
 }
