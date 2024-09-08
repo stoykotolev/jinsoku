@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"math/rand"
 
@@ -36,28 +37,37 @@ type GameState struct {
 	cRound         int
 	c              fyne.Canvas
 	inputChan      chan string
+	sessionScore   int
 }
 
 func (game *GameState) startGame(text *canvas.Text) {
+	// Start the main game loop
+gameSess:
 	for {
 		select {
+		// Listen for the input
 		case inp := <-game.inputChan:
+			// if input is correct, increment the game round and update the symbol
 			if inp == game.selectedSymbol {
 				game.cRound += 1
 				newSymbol := getRandomSymbol()
 				game.selectedSymbol = newSymbol
 				text.Text = newSymbol
 				text.Color = color.White
+				game.sessionScore += 200
+				// if the symbol is incorrect, color red.
 			} else {
 				text.Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
 			}
+			// if the current round is more than the number of rounds, end the game session
 			if game.cRound > game.nRounds {
-				text.Text = "Finito"
-				text.Color = color.RGBA{R: 0, B: 0, G: 255, A: 255}
+				break gameSess
 			}
 			text.Refresh()
 		}
 	}
+	game.c.SetContent(container.NewCenter(canvas.NewText(fmt.Sprintf("Game session is done. Your score is %d", game.sessionScore), color.White)))
+	//TODO: Add 2 btns: Back to menu or Restart game session
 }
 
 func main() {
@@ -70,6 +80,7 @@ func main() {
 		cRound:         1,
 		c:              myWindow.Canvas(),
 		inputChan:      make(chan string),
+		sessionScore:   0,
 	}
 
 	text := canvas.NewText(game.selectedSymbol, color.White)
