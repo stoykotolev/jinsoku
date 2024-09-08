@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"math/rand"
 
@@ -25,34 +24,39 @@ func randomInRange(min, max int) int {
 
 func getRandomSymbol() string {
 	arrLen := len(SpecialSymbolsAndNumbers)
-	el := randomInRange(0, arrLen)
+	el := randomInRange(0, arrLen-1)
 
 	// The character to match
 	return string(SpecialSymbolsAndNumbers[el])
 }
 
 type GameState struct {
-	nRounds       int
-	currentSymbol string
-	cRound        int
+	nRounds        int
+	selectedSymbol string
+	cRound         int
+	c              fyne.Canvas
+	inputChan      chan string
 }
 
-func (game *GameState) startGame(typed string, text *canvas.Text) {
-	if typed == game.currentSymbol {
-		newSymbol := getRandomSymbol()
-		game.currentSymbol = newSymbol
-		text.Text = newSymbol
-		text.Color = color.White
-		text.Refresh()
-		game.cRound += 1
-	} else {
-		text.Color = color.RGBA{R: 255, G: 0, B: 0, A: 255}
-		text.Refresh()
-	}
-	if game.cRound > game.nRounds {
-		text.Text = "Finito"
-		text.Color = color.White
-		text.Refresh()
+func (game *GameState) startGame(text *canvas.Text) {
+	for {
+		select {
+		case inp := <-game.inputChan:
+			if inp == game.selectedSymbol {
+				game.cRound += 1
+				newSymbol := getRandomSymbol()
+				game.selectedSymbol = newSymbol
+				text.Text = newSymbol
+				text.Color = color.White
+			} else {
+				text.Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
+			}
+			if game.cRound > game.nRounds {
+				text.Text = "Finito"
+				text.Color = color.RGBA{R: 0, B: 0, G: 255, A: 255}
+			}
+			text.Refresh()
+		}
 	}
 }
 
@@ -60,30 +64,24 @@ func main() {
 
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Key Detection App")
-	// Display the letter in the UI
 	game := GameState{
-		nRounds:       5,
-		currentSymbol: getRandomSymbol(),
-		cRound:        1,
+		nRounds:        5,
+		selectedSymbol: getRandomSymbol(),
+		cRound:         1,
+		c:              myWindow.Canvas(),
+		inputChan:      make(chan string),
 	}
 
-	text := canvas.NewText(game.currentSymbol, color.White)
+	text := canvas.NewText(game.selectedSymbol, color.White)
 	text.TextSize = 64
 
 	content := container.NewCenter(text)
 	myWindow.SetContent(content)
-
-	// Start the game
-	// Iterate N number of rounds, for each game
-	// Keep score
-	// Show total at the end
 	myWindow.Resize(fyne.NewSize(300, 300))
-	// Set a keyboard event listener
-	myWindow.Canvas().SetOnTypedRune(func(r rune) {
-		fmt.Println("Curr round", game.cRound, game.nRounds)
-		typed := string(r)
-		game.startGame(typed, text)
+	go game.startGame(text)
+	game.c.SetOnTypedRune(func(r rune) {
+		game.inputChan <- string(r)
 	})
-	// Show the window and start the app
+
 	myWindow.ShowAndRun()
 }
