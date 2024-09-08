@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
+	"image/color"
+	"math/rand"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"image/color"
-	"math/rand"
 )
 
 var SpecialSymbolsAndNumbers = []rune{
@@ -29,22 +31,29 @@ func getRandomSymbol() string {
 	return string(SpecialSymbolsAndNumbers[el])
 }
 
-type Game struct {
-	nRounds       int8
+type GameState struct {
+	nRounds       int
 	currentSymbol string
+	cRound        int
 }
 
-func (g *Game ) gameLoop {
-		if typed == g.currentSymbol {
-			newSymbol := getRandomSymbol()
-			game.currentSymbol = newSymbol
-			text.Text = newSymbol
-			text.Color = color.White
-			text.Refresh()
-		} else {
-			text.Color = color.RGBA{R: 255, G: 0, B: 0, A: 255}
-			text.Refresh()
-		}
+func (game *GameState) startGame(typed string, text *canvas.Text) {
+	if typed == game.currentSymbol {
+		newSymbol := getRandomSymbol()
+		game.currentSymbol = newSymbol
+		text.Text = newSymbol
+		text.Color = color.White
+		text.Refresh()
+		game.cRound += 1
+	} else {
+		text.Color = color.RGBA{R: 255, G: 0, B: 0, A: 255}
+		text.Refresh()
+	}
+	if game.cRound > game.nRounds {
+		text.Text = "Finito"
+		text.Color = color.White
+		text.Refresh()
+	}
 }
 
 func main() {
@@ -52,10 +61,12 @@ func main() {
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Key Detection App")
 	// Display the letter in the UI
-	game := Game{
-		nRounds:       10,
+	game := GameState{
+		nRounds:       5,
 		currentSymbol: getRandomSymbol(),
+		cRound:        1,
 	}
+
 	text := canvas.NewText(game.currentSymbol, color.White)
 	text.TextSize = 64
 
@@ -64,13 +75,15 @@ func main() {
 
 	// Start the game
 	// Iterate N number of rounds, for each game
-
+	// Keep score
+	// Show total at the end
+	myWindow.Resize(fyne.NewSize(300, 300))
 	// Set a keyboard event listener
 	myWindow.Canvas().SetOnTypedRune(func(r rune) {
+		fmt.Println("Curr round", game.cRound, game.nRounds)
 		typed := string(r)
+		game.startGame(typed, text)
 	})
-
 	// Show the window and start the app
-	myWindow.Resize(fyne.NewSize(300, 300))
 	myWindow.ShowAndRun()
 }
