@@ -34,6 +34,19 @@ type Game struct {
 	currentSymbol string
 }
 
+func (g *Game ) gameLoop {
+		if typed == g.currentSymbol {
+			newSymbol := getRandomSymbol()
+			game.currentSymbol = newSymbol
+			text.Text = newSymbol
+			text.Color = color.White
+			text.Refresh()
+		} else {
+			text.Color = color.RGBA{R: 255, G: 0, B: 0, A: 255}
+			text.Refresh()
+		}
+}
+
 func main() {
 
 	myApp := app.New()
@@ -55,12 +68,6 @@ func main() {
 	// Set a keyboard event listener
 	myWindow.Canvas().SetOnTypedRune(func(r rune) {
 		typed := string(r)
-		if typed == game.currentSymbol {
-			newSymbol := getRandomSymbol()
-			game.currentSymbol = newSymbol
-			text.Text = newSymbol
-			text.Refresh()
-		}
 	})
 
 	// Show the window and start the app
