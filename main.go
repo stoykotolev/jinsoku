@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"math/rand"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -37,16 +38,21 @@ type GameState struct {
 	cRound         int
 	c              fyne.Canvas
 	inputChan      chan string
-	sessionScore   int
 	text           *canvas.Text
+	times          []time.Time
 }
 
-func (game *GameState) startGame() {
-	symb := getRandomSymbol()
+func (game *GameState) drawText(symb string) {
 	game.text.Text = symb
 	game.selectedSymbol = symb
 	game.text.Color = color.White
 	game.text.Refresh()
+}
+
+func (game *GameState) startGame() {
+	symb := getRandomSymbol()
+	game.drawText(symb)
+	game.times = append(game.times, time.Now())
 
 	game.c.SetOnTypedRune(func(r rune) {
 		game.inputChan <- string(r)
@@ -55,14 +61,11 @@ gameSess:
 	for {
 		select {
 		case inp := <-game.inputChan:
-			fmt.Println(inp)
 			if inp == game.selectedSymbol {
+				game.times = append(game.times, time.Now())
 				game.cRound += 1
 				newSymbol := getRandomSymbol()
-				game.selectedSymbol = newSymbol
-				game.text.Text = newSymbol
-				game.text.Color = color.White
-				game.sessionScore += 200
+				game.drawText(newSymbol)
 			} else {
 				game.text.Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
 			}
@@ -72,7 +75,25 @@ gameSess:
 			game.text.Refresh()
 		}
 	}
-	game.c.SetContent(container.NewCenter(canvas.NewText(fmt.Sprintf("Game session is done. Your score is %d", game.sessionScore), color.White)))
+	score := 0
+	for i, time := range game.times {
+		if i == 0 {
+			continue
+		}
+		diff := time.Sub(game.times[i-1])
+		ms := diff.Milliseconds()
+		switch {
+		case ms < 500:
+			score += 250
+		case ms < 750:
+			score += 150
+		default:
+			score += 50
+		}
+	}
+	//TODO: Do a nerd test on actual perf between for/range with larger structure.
+
+	game.c.SetContent(container.NewCenter(canvas.NewText(fmt.Sprintf("Game session is done. Your score is %d", score), color.White)))
 	//TODO: Add 2 btns: Back to menu or Restart game session
 }
 
@@ -88,8 +109,8 @@ func main() {
 		cRound:         1,
 		c:              myWindow.Canvas(),
 		inputChan:      make(chan string),
-		sessionScore:   0,
 		text:           text,
+		times:          []time.Time{},
 	}
 
 	content := container.NewCenter(text)
