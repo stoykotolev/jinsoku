@@ -38,31 +38,38 @@ type GameState struct {
 	c              fyne.Canvas
 	inputChan      chan string
 	sessionScore   int
+	text           *canvas.Text
 }
 
-func (game *GameState) startGame(text *canvas.Text) {
+func (game *GameState) startGame() {
+	symb := getRandomSymbol()
+	game.text.Text = symb
+	game.selectedSymbol = symb
+	game.text.Color = color.White
+	game.text.Refresh()
+
 	game.c.SetOnTypedRune(func(r rune) {
 		game.inputChan <- string(r)
 	})
-	// Start the main game loop
 gameSess:
 	for {
 		select {
 		case inp := <-game.inputChan:
+			fmt.Println(inp)
 			if inp == game.selectedSymbol {
 				game.cRound += 1
 				newSymbol := getRandomSymbol()
 				game.selectedSymbol = newSymbol
-				text.Text = newSymbol
-				text.Color = color.White
+				game.text.Text = newSymbol
+				game.text.Color = color.White
 				game.sessionScore += 200
 			} else {
-				text.Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
+				game.text.Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
 			}
 			if game.cRound > game.nRounds {
 				break gameSess
 			}
-			text.Refresh()
+			game.text.Refresh()
 		}
 	}
 	game.c.SetContent(container.NewCenter(canvas.NewText(fmt.Sprintf("Game session is done. Your score is %d", game.sessionScore), color.White)))
@@ -73,6 +80,8 @@ func main() {
 
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Key Detection App")
+	text := canvas.NewText("Helo", color.White)
+	text.TextSize = 64
 	game := GameState{
 		nRounds:        5,
 		selectedSymbol: getRandomSymbol(),
@@ -80,14 +89,12 @@ func main() {
 		c:              myWindow.Canvas(),
 		inputChan:      make(chan string),
 		sessionScore:   0,
+		text:           text,
 	}
-
-	text := canvas.NewText(game.selectedSymbol, color.White)
-	text.TextSize = 64
 
 	content := container.NewCenter(text)
 	myWindow.SetContent(content)
 	myWindow.Resize(fyne.NewSize(840, 680))
-	go game.startGame(text)
+	go game.startGame()
 	myWindow.ShowAndRun()
 }
