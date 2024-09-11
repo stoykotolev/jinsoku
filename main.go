@@ -41,13 +41,14 @@ type GameState struct {
 }
 
 func (game *GameState) startGame(text *canvas.Text) {
+	game.c.SetOnTypedRune(func(r rune) {
+		game.inputChan <- string(r)
+	})
 	// Start the main game loop
 gameSess:
 	for {
 		select {
-		// Listen for the input
 		case inp := <-game.inputChan:
-			// if input is correct, increment the game round and update the symbol
 			if inp == game.selectedSymbol {
 				game.cRound += 1
 				newSymbol := getRandomSymbol()
@@ -55,11 +56,9 @@ gameSess:
 				text.Text = newSymbol
 				text.Color = color.White
 				game.sessionScore += 200
-				// if the symbol is incorrect, color red.
 			} else {
 				text.Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
 			}
-			// if the current round is more than the number of rounds, end the game session
 			if game.cRound > game.nRounds {
 				break gameSess
 			}
@@ -88,11 +87,7 @@ func main() {
 
 	content := container.NewCenter(text)
 	myWindow.SetContent(content)
-	myWindow.Resize(fyne.NewSize(300, 300))
+	myWindow.Resize(fyne.NewSize(840, 680))
 	go game.startGame(text)
-	game.c.SetOnTypedRune(func(r rune) {
-		game.inputChan <- string(r)
-	})
-
 	myWindow.ShowAndRun()
 }
