@@ -38,6 +38,7 @@ func GameSummary(window fyne.Window, score int) fyne.CanvasObject {
 		layout.NewSpacer(),
 	)
 
+	//TODO: Setup logic to also store the past scores and maybe order them from highest to lowest.
 	return container.NewVBox(
 		layout.NewSpacer(),
 		centeredText,

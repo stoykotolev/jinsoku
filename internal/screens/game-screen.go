@@ -84,12 +84,13 @@ gameSess:
 	game.w.SetContent(GameSummary(game.w, score))
 }
 
-func GameScreen(window fyne.Window) fyne.CanvasObject {
+func GameScreen(window fyne.Window, rounds int) fyne.CanvasObject {
 	symb := utils.GetRandomSymbol()
 	text := canvas.NewText(symb, color.White)
 	text.TextSize = 64
 	game := GameState{
-		nRounds:        5,
+		//TODO: Setup the rounds to be configurable
+		nRounds:        10,
 		selectedSymbol: symb,
 		cRound:         1,
 		c:              window.Canvas(),
