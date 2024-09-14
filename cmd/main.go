@@ -1,121 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"image/color"
-	"math/rand"
-	"time"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
+	"github.com/stoykotolev/jinsoku/internal/screens"
 )
 
-var SpecialSymbolsAndNumbers = []rune{
-	'1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-	'!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
-	'-', '=', '[', ']', '\\', ';', '\'', ',', '.', '/',
-	'_', '+', '{', '}', '|', ':', '"', '<', '>', '?',
-	'`', '~',
-}
-
-func randomInRange(min, max int) int {
-	return rand.Intn(max-min+1) + min
-}
-
-func getRandomSymbol() string {
-	arrLen := len(SpecialSymbolsAndNumbers)
-	el := randomInRange(0, arrLen-1)
-
-	// The character to match
-	return string(SpecialSymbolsAndNumbers[el])
-}
-
-type GameState struct {
-	nRounds        int
-	selectedSymbol string
-	cRound         int
-	c              fyne.Canvas
-	inputChan      chan string
-	text           *canvas.Text
-	times          []time.Time
-}
-
-func (game *GameState) drawText(symb string) {
-	game.text.Text = symb
-	game.selectedSymbol = symb
-	game.text.Color = color.White
-	game.text.Refresh()
-}
-
-func (game *GameState) startGame() {
-	symb := getRandomSymbol()
-	game.drawText(symb)
-	game.times = append(game.times, time.Now())
-
-	game.c.SetOnTypedRune(func(r rune) {
-		game.inputChan <- string(r)
-	})
-gameSess:
-	for {
-		select {
-		case inp := <-game.inputChan:
-			if inp == game.selectedSymbol {
-				game.times = append(game.times, time.Now())
-				game.cRound += 1
-				newSymbol := getRandomSymbol()
-				game.drawText(newSymbol)
-			} else {
-				game.text.Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
-			}
-			if game.cRound > game.nRounds {
-				break gameSess
-			}
-			game.text.Refresh()
-		}
-	}
-	score := 0
-	for i, time := range game.times {
-		if i == 0 {
-			continue
-		}
-		diff := time.Sub(game.times[i-1])
-		ms := diff.Milliseconds()
-		switch {
-		case ms < 500:
-			score += 250
-		case ms < 750:
-			score += 150
-		default:
-			score += 50
-		}
-	}
-	//TODO: Do a nerd test on actual perf between for/range with larger structure.
-
-	game.c.SetContent(container.NewCenter(canvas.NewText(fmt.Sprintf("Game session is done. Your score is %d", score), color.White)))
-	//TODO: Add 2 btns: Back to menu or Restart game session
-}
-
 func main() {
-
 	myApp := app.New()
-	myWindow := myApp.NewWindow("Key Detection App")
-	text := canvas.NewText("Helo", color.White)
-	text.TextSize = 64
-	game := GameState{
-		nRounds:        5,
-		selectedSymbol: getRandomSymbol(),
-		cRound:         1,
-		c:              myWindow.Canvas(),
-		inputChan:      make(chan string),
-		text:           text,
-		times:          []time.Time{},
-	}
+	myWindow := myApp.NewWindow("Multi-Screen App")
 
-	content := container.NewCenter(text)
-	myWindow.SetContent(content)
+	// Set the initial screen to the main screen
+	myWindow.SetContent(screens.MainScreen(myWindow))
 	myWindow.Resize(fyne.NewSize(840, 680))
-	go game.startGame()
+
+	// Show and run the application
 	myWindow.ShowAndRun()
+
 }
