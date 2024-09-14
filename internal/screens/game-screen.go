@@ -29,10 +29,7 @@ func (game *GameState) drawText(symb string) {
 }
 
 func (game *GameState) startGame() {
-	symb := utils.GetRandomSymbol()
-	game.drawText(symb)
 	game.times = append(game.times, time.Now())
-
 	game.c.SetOnTypedRune(func(r rune) {
 		game.inputChan <- string(r)
 	})
@@ -74,4 +71,22 @@ gameSess:
 
 	game.c.SetContent(container.NewCenter(canvas.NewText(fmt.Sprintf("Game session is done. Your score is %d", score), color.White)))
 	//TODO: Add 2 btns: Back to menu or Restart game session
+}
+
+func GameScren(window fyne.Window) fyne.CanvasObject {
+	symb := utils.GetRandomSymbol()
+	text := canvas.NewText(symb, color.White)
+	text.TextSize = 64
+	game := GameState{
+		nRounds:        5,
+		selectedSymbol: symb,
+		cRound:         1,
+		c:              window.Canvas(),
+		inputChan:      make(chan string),
+		text:           text,
+		times:          []time.Time{},
+	}
+	gc := container.NewCenter(text)
+	go game.startGame()
+	return gc
 }
