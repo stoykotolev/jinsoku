@@ -1,15 +1,27 @@
 package screens
 
 import (
-	"fmt"
 	"image/color"
 	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/widget"
 	"github.com/stoykotolev/jinsoku/pkg/utils"
 )
+
+func StartGame(window fyne.Window) {
+	countDownSlice := [5]string{"5", "4", "3", "2", "1"}
+	countdown := widget.NewLabel("")
+	window.SetContent(container.NewCenter(countdown))
+	for _, el := range countDownSlice {
+		countdown.SetText(el)
+		time.Sleep(time.Second)
+	}
+	window.SetContent(GameScreen(window))
+}
 
 type GameState struct {
 	nRounds        int
@@ -19,6 +31,7 @@ type GameState struct {
 	inputChan      chan string
 	text           *canvas.Text
 	times          []time.Time
+	w              fyne.Window
 }
 
 func (game *GameState) drawText(symb string) {
@@ -68,12 +81,10 @@ gameSess:
 		}
 	}
 	//TODO: Do a nerd test on actual perf between for/range with larger structure.
-
-	game.c.SetContent(container.NewCenter(canvas.NewText(fmt.Sprintf("Game session is done. Your score is %d", score), color.White)))
-	//TODO: Add 2 btns: Back to menu or Restart game session
+	game.w.SetContent(GameSummary(game.w, score))
 }
 
-func GameScren(window fyne.Window) fyne.CanvasObject {
+func GameScreen(window fyne.Window) fyne.CanvasObject {
 	symb := utils.GetRandomSymbol()
 	text := canvas.NewText(symb, color.White)
 	text.TextSize = 64
@@ -85,8 +96,14 @@ func GameScren(window fyne.Window) fyne.CanvasObject {
 		inputChan:      make(chan string),
 		text:           text,
 		times:          []time.Time{},
+		w:              window,
 	}
-	gc := container.NewCenter(text)
+
 	go game.startGame()
-	return gc
+	content := container.NewVBox(
+		layout.NewSpacer(),
+		container.NewCenter(text),
+		layout.NewSpacer(),
+	)
+	return content
 }

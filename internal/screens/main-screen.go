@@ -1,8 +1,6 @@
 package screens
 
 import (
-	"time"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
@@ -24,24 +22,17 @@ func MainScreen(window fyne.Window) fyne.CanvasObject {
 	)
 
 	// Create the buttons, stacked on top of each other
-	button1 := widget.NewButton("Settings", func() {
+	settingsButton := widget.NewButton("Settings", func() {
 		window.SetContent(ConfigurationScreen(window))
 	})
 
-	countDownSlice := [5]string{"5", "4", "3", "2", "1"}
 	button2 := widget.NewButton("Start Game", func() {
-		countdown := widget.NewLabel("")
-		window.SetContent(container.NewCenter(countdown))
-		for _, el := range countDownSlice {
-			countdown.SetText(el)
-			time.Sleep(time.Second)
-		}
-		window.SetContent(GameScren(window))
+		StartGame(window)
 	})
 
 	// Create a vertical box (VBox) with buttons, centered
 	buttons := container.NewVBox(
-		button1,
+		settingsButton,
 		layout.NewSpacer(),
 		button2,
 	)
