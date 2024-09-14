@@ -76,6 +76,7 @@ gameSess:
 func GameScren(window fyne.Window) fyne.CanvasObject {
 	symb := utils.GetRandomSymbol()
 	text := canvas.NewText(symb, color.White)
+	text.TextSize = 64
 	game := GameState{
 		nRounds:        5,
 		selectedSymbol: symb,
