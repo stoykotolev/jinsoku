@@ -1,7 +1,11 @@
 package screens
 
 import (
+	"image/color"
+	"time"
+
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
@@ -25,7 +29,17 @@ func MainScreen(window fyne.Window) fyne.CanvasObject {
 	button1 := widget.NewButton("Settings", func() {
 		window.SetContent(ConfigurationScreen(window))
 	})
+
+	countDownSlice := [5]string{"5", "4", "3", "2", "1"}
 	button2 := widget.NewButton("Start Game", func() {
+		countdown := canvas.NewText("", color.White)
+		countdown.TextSize = 64
+		window.SetContent(container.NewCenter(countdown))
+		for _, el := range countDownSlice {
+			countdown.Text = el
+			time.Sleep(time.Second)
+			countdown.Refresh()
+		}
 		window.SetContent(GameScren(window))
 	})
 
