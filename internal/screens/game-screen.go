@@ -84,7 +84,7 @@ gameSess:
 	game.w.SetContent(GameSummary(game.w, score))
 }
 
-func GameScreen(window fyne.Window, rounds int) fyne.CanvasObject {
+func GameScreen(window fyne.Window) fyne.CanvasObject {
 	symb := utils.GetRandomSymbol()
 	text := canvas.NewText(symb, color.White)
 	text.TextSize = 64

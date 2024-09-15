@@ -48,5 +48,4 @@ func MainScreen(window fyne.Window) fyne.CanvasObject {
 	)
 
 	return content
-
 }
